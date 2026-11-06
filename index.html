@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sharmin's English Flashcards App</title>
+    <style>
+        * { box-sizing: border-box; }
+        button:focus-visible { outline: 3px solid #fbbf24; outline-offset: 3px; }
+        .option-btn:disabled { cursor: default; }
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-color: #38bdf8;
+            --correct-color: #22c55e;
+            --wrong-color: #ef4444;
+            --text-color: #f8fafc;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            color: var(--accent-color);
+            margin-bottom: 5px;
+            font-size: 1.8rem;
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-bottom: 25px;
+        }
+
+        .flashcard-container {
+            width: 100%;
+            max-width: 500px;
+            perspective: 1000px;
+        }
+
+        .card {
+            width: 100%;
+            min-height: 380px;
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            padding: 25px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border: 1px solid #334155;
+            position: relative;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #64748b;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 10px;
+            direction: ltr;
+        }
+
+        .question {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin: 15px 0;
+            direction: ltr;
+            text-align: left;
+            color: #e2e8f0;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            direction: ltr;
+        }
+
+        .option-btn {
+            background-color: #334155;
+            color: #f8fafc;
+            border: 1px solid #475569;
+            padding: 12px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        .option-btn:hover {
+            background-color: #475569;
+            border-color: var(--accent-color);
+        }
+
+        .option-btn.correct {
+            background-color: var(--correct-color) !important;
+            color: white;
+            border-color: var(--correct-color);
+        }
+
+        .option-btn.wrong {
+            background-color: var(--wrong-color) !important;
+            color: white;
+            border-color: var(--wrong-color);
+        }
+
+        .explanation {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #0f172a;
+            border-radius: 8px;
+            border-right: 4px solid var(--accent-color);
+            display: none;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #cbd5e1;
+            direction: rtl;
+            text-align: right;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 500px;
+            margin-top: 20px;
+        }
+
+        .control-btn {
+            background-color: var(--accent-color);
+            color: #0f172a;
+            font-weight: bold;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .control-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>فلش‌کارت‌های اختصاصی شارمین</h1>
+    <div class="subtitle">۵ کارت چهارگزینه‌ای · انگلیسی کاربردی در محیط کار</div>
+
+    <div class="flashcard-container">
+        <div class="card">
+            <div>
+                <div class="card-header">
+                    <span id="card-category">Category</span>
+                    <span id="card-progress">1 / 5</span>
+                </div>
+                <div class="question" id="card-question">Question text here...</div>
+            </div>
+            
+            <div class="options" id="card-options"></div>
+
+            <div class="explanation" id="card-explanation" aria-live="polite"></div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="control-btn" id="prev-btn" onclick="prevCard()">قبلی</button>
+        <button class="control-btn" id="next-btn" onclick="nextCard()">بعدی</button>
+    </div>
+
+    <script>
+        const flashcards = [
+            {
+                category: "Day 1 - Prepositions",
+                question: "Which sentence uses “impact” directly with an object (without a preposition)?",
+                options: [
+                    "This design change impacts on the deadline.",
+                    "This design change impacts the deadline.",
+                    "This design change impacts at the deadline.",
+                    "This design change impacts for the deadline."
+                ],
+                correct: 1,
+                explanation: "<b>توضیح:</b> در کاربرد گذرا، فعل impact مستقیماً مفعول می‌گیرد؛ گزینهٔ دوم نمونهٔ درست این ساختار است. ساختار impact on نیز در برخی کاربردها پذیرفته است؛ برای جلوگیری از ابهام، سؤال روی ساختار بدون حرف اضافه تمرکز دارد."
+            },
+            {
+                category: "Day 1 - Vocabulary",
+                question: "What is the correct term for a company that sells and supplies building materials?",
+                options: [
+                    "Contractor",
+                    "Architect",
+                    "Supplier",
+                    "Worker"
+                ],
+                correct: 2,
+                explanation: "<b>توضیح:</b> کلمه Supplier به معنای تامین‌کننده کالا و متریال است، در حالی که Contractor به پیمانکار اجرایی گفته می‌شود."
+            },
+            {
+                category: "Day 1 - Phrasal Verbs",
+                question: "How do you naturally say 'اطلاع دادن / در جریان گذاشتن کسی' in business English?",
+                options: [
+                    "Concern someone",
+                    "Let someone know",
+                    "Make someone notice",
+                    "Say someone"
+                ],
+                correct: 1,
+                explanation: "<b>توضیح:</b> عبارت Let someone know رایج‌ترین و طبیعی‌ترین عبارت برای خبر دادن و در جریان گذاشتن افراد در محیط‌های کاری است."
+            },
+            {
+                category: "Day 2 - Grammar & Modifiers",
+                question: "Choose the correct phrase to request a 3-day extension:",
+                options: [
+                    "Can I have a 3-days extension?",
+                    "Can I have a 3-day extension?",
+                    "Can I have an 3-days extension?",
+                    "Can I have 3 day extension?"
+                ],
+                correct: 1,
+                explanation: "<b>توضیح:</b> در صفت مرکبِ عدد و اسم، اسم به صورت مفرد می‌آید؛ بنابراین day مفرد می‌ماند. پیش از عبارت نیز از a استفاده می‌کنیم."
+            },
+            {
+                category: "Day 2 - Business Meetings",
+                question: "How do you politely state in a meeting that a project is delayed?",
+                options: [
+                    "We are running a bit behind schedule.",
+                    "We are late of the schedule.",
+                    "We stop the timeline schedule.",
+                    "We missed all schedule time."
+                ],
+                correct: 0,
+                explanation: "<b>توضیح:</b> عبارت 'running behind schedule' یک عبارت طبیعی و مؤدبانه برای گزارش تاخیر زمانی در پروژه‌هاست."
+            }
+        ];
+
+        let currentIndex = 0;
+
+        function loadCard(index) {
+            const card = flashcards[index];
+            document.getElementById('card-category').innerText = card.category;
+            document.getElementById('card-progress').innerText = `${index + 1} / ${flashcards.length}`;
+            document.getElementById('card-question').innerText = card.question;
+
+            const optionsContainer = document.getElementById('card-options');
+            optionsContainer.innerHTML = '';
+
+            const explanationContainer = document.getElementById('card-explanation');
+            explanationContainer.style.display = 'none';
+
+            card.options.forEach((option, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = option;
+                btn.onclick = () => selectOption(i, card.correct, card.explanation);
+                optionsContainer.appendChild(btn);
+            });
+
+            document.getElementById('prev-btn').disabled = index === 0;
+            document.getElementById('next-btn').disabled = index === flashcards.length - 1;
+        }
+
+        function selectOption(selected, correct, explanation) {
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach((btn, i) => {
+                btn.disabled = true;
+                if (i === correct) {
+                    btn.classList.add('correct');
+                } else if (i === selected) {
+                    btn.classList.add('wrong');
+                }
+            });
+
+            const explanationContainer = document.getElementById('card-explanation');
+            explanationContainer.innerHTML = explanation;
+            explanationContainer.style.display = 'block';
+        }
+
+        function nextCard() {
+            if (currentIndex < flashcards.length - 1) {
+                currentIndex++;
+                loadCard(currentIndex);
+            }
+        }
+
+        function prevCard() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                loadCard(currentIndex);
+            }
+        }
+
+        loadCard(currentIndex);
+    </script>
+</body>
+</html>
